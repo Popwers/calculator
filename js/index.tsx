@@ -1,75 +1,179 @@
-const affichage: Element | null = document.querySelector("header p");
-const boutons: NodeListOf<Element> = document.querySelectorAll("section span");
+const affichage = document.querySelector<HTMLParagraphElement>("header p");
+const boutons = document.querySelectorAll<HTMLElement>("section span");
 
-var pile: string = "";
+let pile = "";
+const operators = new Set(["+", "-", "x", "/"]);
 
-boutons.forEach((bouton: Element) =>
-	bouton.addEventListener("click", (e: Event) => {
-		switch (e.target?.innerHTML) {
-			case "0":
-				if (!(pile.length === 1 && pile[0] === "0"))
-					pile += e.target?.innerHTML;
-				break;
+const isOperator = (char: string | undefined): boolean =>
+	typeof char === "string" && operators.has(char);
 
-			case ",":
-				if (
-					pile[pile.length - 1] === undefined ||
-					pile[pile.length - 1] === "+" ||
-					pile[pile.length - 1] === "-" ||
-					pile[pile.length - 1] === "x" ||
-					pile[pile.length - 1] === "/"
-				) {
-					pile += "0,";
-				} else {
-					pile += e.target?.innerHTML;
-				}
+const getLastChar = (): string | undefined => pile[pile.length - 1];
 
-				break;
+const getCurrentNumber = (): string => {
+	let index = pile.length - 1;
 
+	while (index >= 0) {
+		const char = pile[index];
+		if (isOperator(char) || char === "(" || char === ")") {
+			break;
+		}
+		index -= 1;
+	}
+
+	return pile.slice(index + 1);
+};
+
+const trimTrailingTokens = (): void => {
+	while (pile.length > 0) {
+		const lastChar = getLastChar();
+
+		if (!lastChar || isOperator(lastChar) || lastChar === ",") {
+			pile = pile.slice(0, -1);
+			continue;
+		}
+
+		break;
+	}
+};
+
+const updateDisplay = (): void => {
+	if (affichage) affichage.textContent = pile;
+};
+
+const resetIfError = (key: string): void => {
+	if (pile === "Erreur" && key !== "AC") {
+		pile = "";
+	}
+};
+
+const appendDigit = (digit: string): void => {
+	const currentNumber = getCurrentNumber();
+
+	if (currentNumber === "0") {
+		pile = `${pile.slice(0, -1)}${digit}`;
+		return;
+	}
+
+	pile += digit;
+};
+
+boutons.forEach((bouton) =>
+	bouton.addEventListener("click", (event: Event) => {
+		const key = (event.currentTarget as HTMLElement).textContent?.trim();
+		if (!key) return;
+
+		resetIfError(key);
+
+		switch (key) {
 			case "AC":
 				pile = "";
 				break;
 
 			case "DEL":
-				pile = pile.substring(0, pile.length - 1);
+				pile = pile.slice(0, -1);
 				break;
 
+			case ",": {
+				const lastChar = getLastChar();
+
+				if (lastChar === ")") break;
+
+				if (!lastChar || isOperator(lastChar) || lastChar === "(") {
+					pile += "0,";
+					break;
+				}
+
+				const currentNumber = getCurrentNumber();
+				if (!currentNumber.includes(",")) {
+					pile += ",";
+				}
+				break;
+			}
+
 			case "=":
-				pile = eval(pile.replaceAll("x", "*").replaceAll(",", "."))
-					.toString()
-					.replaceAll(".", ",");
+				if (!pile) break;
+				trimTrailingTokens();
+				if (!pile) break;
+
+				try {
+					const expression = pile.replaceAll("x", "*").replaceAll(",", ".");
+					const result = Number(eval(expression));
+					pile = Number.isFinite(result)
+						? result.toString().replaceAll(".", ",")
+						: "Erreur";
+				} catch {
+					pile = "Erreur";
+				}
 				break;
 
 			case "+":
 			case "-":
 			case "x":
-			case "/":
-				switch (pile[pile.length - 1]) {
-					case "+":
-					case "-":
-					case "x":
-					case "/":
-						pile = pile.substring(0, pile.length - 1);
-						break;
+			case "/": {
+				const lastChar = getLastChar();
+
+				if (!pile) {
+					if (key === "-") pile = "-";
+					break;
 				}
 
+				if (lastChar === "(" && key !== "-") break;
+
+				if (isOperator(lastChar)) {
+					if (key === "-" && (lastChar === "x" || lastChar === "/")) {
+						pile += key;
+					} else {
+						pile = `${pile.slice(0, -1)}${key}`;
+					}
+				} else if (lastChar !== ",") {
+					pile += key;
+				}
+				break;
+			}
+
+			case "(": {
+				const lastChar = getLastChar();
+
+				if (!lastChar || isOperator(lastChar) || lastChar === "(") {
+					pile += "(";
+				}
+				break;
+			}
+
+			case ")": {
+				const lastChar = getLastChar();
+				const opened = (pile.match(/\(/g) ?? []).length;
+				const closed = (pile.match(/\)/g) ?? []).length;
+
+				if (
+					opened > closed &&
+					lastChar &&
+					!isOperator(lastChar) &&
+					lastChar !== "," &&
+					lastChar !== "("
+				) {
+					pile += ")";
+				}
+				break;
+			}
+
 			default:
-				if (pile[0] === "0" && pile.length > 1 && pile[1] !== ",")
-					pile = pile.substring(1, pile.length);
-				pile += e.target?.innerHTML;
+				if (/^\d$/.test(key)) {
+					appendDigit(key);
+				}
 				break;
 		}
 
-		if (affichage != null) affichage.innerHTML = pile;
+		updateDisplay();
 	})
 );
 
-/* Background Loop Color */
 const generateColor = () => {
-	const randomColor: string = Math.floor(Math.random() * 16777215).toString(
-		16
-	);
-	document.body.style.backgroundColor = "#" + randomColor;
+	const randomColor = Math.floor(Math.random() * 0xffffff)
+		.toString(16)
+		.padStart(6, "0");
+
+	document.body.style.backgroundColor = `#${randomColor}`;
 	setTimeout(generateColor, 8000);
 };
 
