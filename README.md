@@ -1,16 +1,15 @@
-# Simple HTML / TS Calculator
+# Calculator
 
-## Table of Contents
+Static HTML calculator written while learning TypeScript. The UI is French. It uses a comma as the decimal separator and `x` for multiply.
 
-1. [General Informations](#general-informations)
-2. [Technologies](#technologies)
-
-### General Informations
 ![Screenshot](screenshot.png)
-***
-This is a simple HTML5 calculator I wrote in TypeScript to discover the language.<br/>
-Feel free to use, correct and improve it :)
 
-## Technologies
-***
-* [TypeScript](https://www.typescriptlang.org/)
+## Use
+
+Open `index.html` in a browser. The page loads `css/style.min.css` and `js/index.min.js`.
+
+Source lives in `css/style.scss` and `js/index.tsx`. This repo has no build step. If you edit the source, compile those two files and keep the `.min` files in sync.
+
+## License
+
+MIT. See `LICENSE`.
