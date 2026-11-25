@@ -32,7 +32,10 @@ body {
 		}
 
 		main {
-			span {
+			button {
+				border: 0;
+				padding: 0;
+				font: inherit;
 				user-select: none;
 				display: flex;
 				justify-content: center;
@@ -52,7 +55,7 @@ body {
 				}
 
 				&:active,
-				&:focus {
+				&:focus-visible {
 					transform: scale(0.95);
 				}
 			}
@@ -76,7 +79,7 @@ body {
 					grid-template-columns: repeat(3, auto);
 					width: 100%;
 
-					span {
+					button {
 						&:nth-child(10) {
 							grid-column-start: 1;
 							grid-column-end: 3;
@@ -88,7 +91,7 @@ body {
 					display: flex;
 					flex-direction: column;
 
-					span {
+					button {
 						background-color: #ff9520;
 						color: #fff;
 

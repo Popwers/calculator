@@ -1,5 +1,5 @@
 const affichage: Element | null = document.querySelector("header p");
-const boutons: NodeListOf<Element> = document.querySelectorAll("section span");
+const boutons: NodeListOf<Element> = document.querySelectorAll("section button");
 
 var pile: string = "";
 
