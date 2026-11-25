@@ -7,7 +7,7 @@ Static HTML calculator. The browser loads the minified CSS and JS. Source copies
 - `index.html` is the page. `lang` is `fr`. The title is Calculatrice.
 - `css/style.scss` is the stylesheet source. The page loads `css/style.min.css`.
 - `js/index.tsx` is the TypeScript source. The page loads `js/index.min.js`.
-- The display is `header p`. Keys are `section span`. The running expression is the string `pile`.
+- The display is `header p`. Keys are `section button`. The running expression is the string `pile`.
 
 ## Run
 
