@@ -3,6 +3,17 @@ const boutons: NodeListOf<Element> = document.querySelectorAll("section button")
 
 var pile: string = "";
 
+const evaluate = (input: string): string | null => {
+	const expression = input.replaceAll("x", "*").replaceAll(",", ".");
+	if (!/^[0-9.+\-*/() ]+$/.test(expression)) return null;
+
+	try {
+		return eval(expression).toString().replaceAll(".", ",");
+	} catch {
+		return null;
+	}
+};
+
 boutons.forEach((bouton: Element) =>
 	bouton.addEventListener("click", (e: Event) => {
 		switch (e.target?.innerHTML) {
@@ -34,11 +45,11 @@ boutons.forEach((bouton: Element) =>
 				pile = pile.substring(0, pile.length - 1);
 				break;
 
-			case "=":
-				pile = eval(pile.replaceAll("x", "*").replaceAll(",", "."))
-					.toString()
-					.replaceAll(".", ",");
+			case "=": {
+				const result = evaluate(pile);
+				if (result !== null) pile = result;
 				break;
+			}
 
 			case "+":
 			case "-":
