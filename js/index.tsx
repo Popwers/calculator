@@ -1,17 +1,75 @@
-const affichage: Element | null = document.querySelector("header p");
+const affichage: Element | null = document.querySelector("header output");
 const boutons: NodeListOf<Element> = document.querySelectorAll("section button");
 
 var pile: string = "";
 
-const evaluate = (input: string): string | null => {
-	const expression = input.replaceAll("x", "*").replaceAll(",", ".");
-	if (!/^[0-9.+\-*/() ]+$/.test(expression)) return null;
+type Token = number | "+" | "-" | "*" | "/" | "(" | ")";
 
-	try {
-		return eval(expression).toString().replaceAll(".", ",");
-	} catch {
-		return null;
+const tokenize = (expression: string): Token[] | null => {
+	const tokens: Token[] = [];
+	const pattern = /\s*(?:(\d+\.?\d*|\.\d+)|([-+*/()]))/y;
+
+	while (pattern.lastIndex < expression.length) {
+		const match = pattern.exec(expression);
+		if (match === null) return expression.slice(pattern.lastIndex).trim() === "" ? tokens : null;
+		tokens.push(match[1] !== undefined ? Number(match[1]) : (match[2] as Token));
 	}
+
+	return tokens;
+};
+
+const parseExpression = (tokens: Token[]): number | null => {
+	let index = 0;
+
+	const parseValue = (): number | null => {
+		const token = tokens[index++];
+		if (typeof token === "number") return token;
+		if (token === "-" || token === "+") {
+			const value = parseValue();
+			return value === null ? null : token === "-" ? -value : value;
+		}
+		if (token === "(") {
+			const value = parseSum();
+			if (value === null || tokens[index++] !== ")") return null;
+			return value;
+		}
+		return null;
+	};
+
+	const parseProduct = (): number | null => {
+		let left = parseValue();
+		while (left !== null && (tokens[index] === "*" || tokens[index] === "/")) {
+			const operator = tokens[index++];
+			const right = parseValue();
+			if (right === null) return null;
+			left = operator === "*" ? left * right : left / right;
+		}
+		return left;
+	};
+
+	const parseSum = (): number | null => {
+		let left = parseProduct();
+		while (left !== null && (tokens[index] === "+" || tokens[index] === "-")) {
+			const operator = tokens[index++];
+			const right = parseProduct();
+			if (right === null) return null;
+			left = operator === "+" ? left + right : left - right;
+		}
+		return left;
+	};
+
+	const result = parseSum();
+	return index === tokens.length ? result : null;
+};
+
+const evaluate = (input: string): string | null => {
+	const tokens = tokenize(input.replaceAll("x", "*").replaceAll(",", "."));
+	if (tokens === null || tokens.length === 0) return null;
+
+	const result = parseExpression(tokens);
+	if (result === null || !Number.isFinite(result)) return null;
+
+	return result.toString().replaceAll(".", ",");
 };
 
 boutons.forEach((bouton: Element) =>
@@ -76,12 +134,20 @@ boutons.forEach((bouton: Element) =>
 );
 
 /* Background Loop Color */
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+let colorTimer: number | undefined;
+
 const generateColor = () => {
+	clearTimeout(colorTimer);
+	if (reducedMotion.matches) return;
+
 	const randomColor: string = Math.floor(Math.random() * 16777215).toString(
 		16
 	);
 	document.body.style.backgroundColor = "#" + randomColor;
-	setTimeout(generateColor, 8000);
+	colorTimer = setTimeout(generateColor, 8000);
 };
 
 generateColor();
+reducedMotion.addEventListener("change", generateColor);
